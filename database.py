@@ -61,6 +61,26 @@ def init_db():
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(project_id) REFERENCES projects(id)
         );
+
+        CREATE TABLE IF NOT EXISTS research_gaps (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            topic TEXT,
+            summary TEXT,
+            research_gap TEXT,
+            recommendations TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(project_id) REFERENCES projects(id)
+        );
+
+        CREATE TABLE IF NOT EXISTS literature_reviews (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            content TEXT NOT NULL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(project_id) REFERENCES projects(id)
+        );
         """
     )
 
@@ -260,6 +280,46 @@ def get_all_langs():
 
 def get_all_source_types():
     return ["All", "Manual", "arXiv", "Crossref", "Database", "Conference", "Journal"]
+
+
+def add_research_gap(project_id, topic, summary, research_gap, recommendations):
+    conn = get_connection()
+    conn.execute(
+        "INSERT INTO research_gaps (project_id, topic, summary, research_gap, recommendations) VALUES (?, ?, ?, ?, ?)",
+        (project_id, topic, summary, research_gap, recommendations),
+    )
+    conn.commit()
+    conn.close()
+
+
+def list_research_gaps(project_id):
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT * FROM research_gaps WHERE project_id = ? ORDER BY created_at DESC",
+        (project_id,),
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def add_review(project_id, title, content):
+    conn = get_connection()
+    conn.execute(
+        "INSERT INTO literature_reviews (project_id, title, content) VALUES (?, ?, ?)",
+        (project_id, title, content),
+    )
+    conn.commit()
+    conn.close()
+
+
+def list_reviews(project_id):
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT * FROM literature_reviews WHERE project_id = ? ORDER BY created_at DESC",
+        (project_id,),
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
 
 
 if __name__ == "__main__":
