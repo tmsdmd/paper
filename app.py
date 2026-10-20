@@ -7,6 +7,8 @@ import streamlit as st
 from database import (
     add_note,
     add_paper,
+    add_research_gap,
+    add_review,
     add_task,
     create_project,
     delete_paper,
@@ -18,6 +20,8 @@ from database import (
     init_db,
     list_papers,
     list_projects,
+    list_research_gaps,
+    list_reviews,
     list_tasks,
 )
 from pdf_export import export_papers_pdf
@@ -31,6 +35,9 @@ TRANSLATIONS = {
         "search": "البحث في الإنترنت",
         "library": "المكتبة",
         "compare": "المقارنة",
+        "gap": "فجوة بحثية",
+        "review": "مراجعة أدبية",
+        "roadmap": "خطة الأطروحة",
         "export": "تصدير PDF",
         "new_project": "مشروع جديد",
         "project_name": "اسم المشروع",
@@ -70,6 +77,19 @@ TRANSLATIONS = {
         "task_status": "الحالة",
         "task_detail": "التفاصيل",
         "task_add": "إضافة مهمة",
+        "gap_topic": "موضوع فجوة البحث",
+        "gap_summary": "ملخص الفجوة",
+        "gap_analysis": "تحليل الفجوة",
+        "gap_recommendations": "التوصيات",
+        "save_gap": "حفظ الفجوة",
+        "review_title": "عنوان المراجعة الأدبية",
+        "review_content": "محتوى المراجعة الأدبية",
+        "save_review": "حفظ المراجعة",
+        "roadmap_title": "عنوان الخطة",
+        "roadmap_content": "محتوى خطة الأطروحة",
+        "save_roadmap": "حفظ الخطة",
+        "generate_text": "توليد نص عربي/إنجليزي",
+        "generated_text": "النص المولّد",
         "empty": "لا توجد سجلات بعد",
     },
     "English": {
@@ -79,6 +99,9 @@ TRANSLATIONS = {
         "search": "Web Search",
         "library": "Library",
         "compare": "Comparison",
+        "gap": "Research Gap",
+        "review": "Literature Review",
+        "roadmap": "Thesis Roadmap",
         "export": "PDF Export",
         "new_project": "New Project",
         "project_name": "Project Name",
@@ -118,6 +141,19 @@ TRANSLATIONS = {
         "task_status": "Status",
         "task_detail": "Details",
         "task_add": "Add task",
+        "gap_topic": "Research gap topic",
+        "gap_summary": "Gap summary",
+        "gap_analysis": "Gap analysis",
+        "gap_recommendations": "Recommendations",
+        "save_gap": "Save gap",
+        "review_title": "Literature review title",
+        "review_content": "Literature review content",
+        "save_review": "Save review",
+        "roadmap_title": "Roadmap title",
+        "roadmap_content": "Thesis roadmap content",
+        "save_roadmap": "Save roadmap",
+        "generate_text": "Generate Arabic/English text",
+        "generated_text": "Generated text",
         "empty": "No records yet",
     },
 }
@@ -217,11 +253,14 @@ if project_id is None:
     st.session_state.project_id = project_id
 
 
-tab_dashboard, tab_search, tab_library, tab_compare, tab_export = st.tabs([
+tab_dashboard, tab_search, tab_library, tab_compare, tab_gap, tab_review, tab_roadmap, tab_export = st.tabs([
     t("dashboard"),
     t("search"),
     t("library"),
     t("compare"),
+    t("gap"),
+    t("review"),
+    t("roadmap"),
     t("export"),
 ])
 
@@ -351,6 +390,67 @@ with tab_compare:
                 ]
             )
             st.dataframe(compare_df, use_container_width=True)
+    else:
+        st.info(t("empty"))
+
+with tab_gap:
+    st.title(t("gap"))
+    gap_topic = st.text_input(t("gap_topic"), placeholder="Example: AI for learning analytics")
+    gap_summary = st.text_area(t("gap_summary"), height=100)
+    gap_analysis = st.text_area(t("gap_analysis"), height=120)
+    gap_recommendations = st.text_area(t("gap_recommendations"), height=120)
+    if st.button(t("save_gap")):
+        if gap_topic.strip():
+            add_research_gap(project_id, gap_topic.strip(), gap_summary.strip(), gap_analysis.strip(), gap_recommendations.strip())
+            st.success("Research gap saved")
+            st.rerun()
+
+    stored_gaps = list_research_gaps(project_id)
+    if stored_gaps:
+        for g in stored_gaps:
+            st.markdown("---")
+            st.markdown(f"### {g['topic']}")
+            st.write(f"Summary: {g['summary']}")
+            st.write(f"Gap: {g['research_gap']}")
+            st.write(f"Recommendations: {g['recommendations']}")
+    else:
+        st.info(t("empty"))
+
+with tab_review:
+    st.title(t("review"))
+    review_title = st.text_input(t("review_title"), placeholder="Literature review title")
+    review_content = st.text_area(t("review_content"), height=220)
+    if st.button(t("save_review")):
+        if review_title.strip() and review_content.strip():
+            add_review(project_id, review_title.strip(), review_content.strip())
+            st.success("Literature review saved")
+            st.rerun()
+
+    reviews = list_reviews(project_id)
+    if reviews:
+        for item in reviews:
+            st.markdown("---")
+            st.markdown(f"### {item['title']}")
+            st.write(item['content'])
+    else:
+        st.info(t("empty"))
+
+with tab_roadmap:
+    st.title(t("roadmap"))
+    roadmap_title = st.text_input(t("roadmap_title"), placeholder="Thesis roadmap title")
+    roadmap_content = st.text_area(t("roadmap_content"), height=220)
+    if st.button(t("save_roadmap")):
+        if roadmap_title.strip() and roadmap_content.strip():
+            add_review(project_id, roadmap_title.strip(), roadmap_content.strip())
+            st.success("Roadmap saved")
+            st.rerun()
+
+    roadmap_items = list_reviews(project_id)
+    if roadmap_items:
+        for item in roadmap_items:
+            st.markdown("---")
+            st.markdown(f"### {item['title']}")
+            st.write(item['content'])
     else:
         st.info(t("empty"))
 
